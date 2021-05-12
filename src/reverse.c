@@ -18,7 +18,24 @@ void reverse_uint_naive(unsigned int *output, const unsigned int *input, unsigne
         output[i] = result;
     }
 }
-void reverse_uint_lookup(unsigned int *output, const unsigned int *input, unsigned int size) {}
+
+static const unsigned char bit_reverse_table256[256] =
+{
+#   define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
+#   define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
+#   define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
+    R6(0), R6(2), R6(1), R6(3)
+};
+void reverse_uint_lookup(unsigned int *output, const unsigned int *input, unsigned int size) {
+    for (unsigned int i = 0; i < size; i++) {
+        unsigned char *in = (unsigned char *)&input[i];
+        unsigned char *out = (unsigned char *)&output[i];
+        out[3] = bit_reverse_table256[in[0]];
+        out[2] = bit_reverse_table256[in[1]];
+        out[1] = bit_reverse_table256[in[2]];
+        out[0] = bit_reverse_table256[in[3]];
+    }
+}
 
 unsigned char reverse_uchar_64mul_1(unsigned char input) {
     return (input * 0x0202020202ULL & 0x010884422010ULL) % 1023;

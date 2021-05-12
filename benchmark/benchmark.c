@@ -33,6 +33,13 @@ int main() {
     printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
 
     gettimeofday(&start, NULL);
+    reverse_uint_lookup(output_vector, input_vector, N);
+    gettimeofday(&end, NULL);
+    elapsed = elapsed_seconds(&start, &end);
+    printf("Lookup implementation\n");
+    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
+
+    gettimeofday(&start, NULL);
     reverse_uint_log(output_vector, input_vector, N);
     gettimeofday(&end, NULL);
     elapsed = elapsed_seconds(&start, &end);

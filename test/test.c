@@ -24,6 +24,14 @@ void test_reverse() {
 
     reverse_uint_naive(ref_output_vector, input_vector, N);
 
+    reverse_uint_lookup(output_vector, input_vector, N);
+    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
+        printf("Reverse uint lookup is correct\n");
+    } else {
+        printf("Reverse uint lookup is INCORRECT\n");
+    }
+    memset(output_vector, 0, ALLOC_SIZE);
+
     reverse_uint_log(output_vector, input_vector, N);
     if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
         printf("Reverse uint log is correct\n");
