@@ -6,9 +6,11 @@ void interleave_naive(unsigned int *output, unsigned short *input_1, unsigned sh
         unsigned short in2 = input_2[i];
         unsigned int result = 0;
 
-        for (int j = 0; j < sizeof(in1) * CHAR_BIT; j++) {
+        for (unsigned int j = 0; j < sizeof(in1) * CHAR_BIT; j++) {
             result |= (in1 & 1U << j) << j | (in2 & 1U << j) << (j+1);
         }
+
+        output[i] = result;
     }
 }
 

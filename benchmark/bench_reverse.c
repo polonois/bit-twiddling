@@ -4,8 +4,9 @@
 
 #include "reverse.h"
 
+#define BENCH_NUMBER 6
 #define N 10000000
-#define ALLOC_SIZE N*sizeof (unsigned int)
+#define ALLOC_SIZE N*sizeof (uint32_t)
 
 static double elapsed_seconds(struct timeval *start, struct timeval *end) {
     long seconds = end->tv_sec - start->tv_sec;
@@ -14,66 +15,42 @@ static double elapsed_seconds(struct timeval *start, struct timeval *end) {
     return elapsed;
 }
 
+struct benchcase {
+    char *bench_name;
+    void (*func)(unsigned *, const unsigned *, unsigned);
+};
+
+static const struct benchcase BENCHCASES[BENCH_NUMBER] = {
+    {.bench_name="32b reverse with LOOKUP",     reverse_uint_lookup},
+    {.bench_name="32b reverse with LOG",        reverse_uint_log},
+    {.bench_name="32b reverse with LOG AVX256", reverse_uint_log_avx256},
+    {.bench_name="32b reverse with 64b MUL 1",  reverse_uint_64bmul_1},
+    {.bench_name="32b reverse with 64b MUL 2",  reverse_uint_64bmul_2},
+    {.bench_name="32b reverse with no64b MUL",  reverse_uint_no64bmul}
+};
+
 int bench_reverse() {
-    unsigned int *input_vector = (unsigned int *)aligned_alloc(32, ALLOC_SIZE);
-    unsigned int *output_vector = (unsigned int *)aligned_alloc(32, ALLOC_SIZE);
+    uint32_t *input_vector = (uint32_t *)aligned_alloc(32, ALLOC_SIZE);
+    uint32_t *output_vector = (uint32_t *)aligned_alloc(32, ALLOC_SIZE);
 
     for (int i = 0; i < N; i++) {
-        input_vector[i] = (unsigned int)random();
+        input_vector[i] = (uint32_t)random();
     }
 
     struct timeval start, end;
     double elapsed;
 
-    gettimeofday(&start, NULL);
-    reverse_uint_naive(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("Naive implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-
-    gettimeofday(&start, NULL);
-    reverse_uint_lookup(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("Lookup implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-
-    gettimeofday(&start, NULL);
-    reverse_uint_log(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("Log implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-
-    gettimeofday(&start, NULL);
-    reverse_uint_log_avx256(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("Log avx256 implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-    
-    gettimeofday(&start, NULL);
-    reverse_uint_64bmul_1(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("3 OPs 64MUL implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-
-    gettimeofday(&start, NULL);
-    reverse_uint_64bmul_2(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("4 OPs 64MUL implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
-
-    gettimeofday(&start, NULL);
-    reverse_uint_no64bmul(output_vector, input_vector, N);
-    gettimeofday(&end, NULL);
-    elapsed = elapsed_seconds(&start, &end);
-    printf("7 OPs no 64MUL implementation\n");
-    printf("%f seconds elapsed => %.2f GB/s\n", elapsed, ALLOC_SIZE/elapsed/1e9);
+    for (int i = 0; i < BENCH_NUMBER; i++) {
+        gettimeofday(&start, NULL);
+        BENCHCASES[i].func(output_vector, input_vector, N);
+        gettimeofday(&end, NULL);
+        elapsed = elapsed_seconds(&start, &end);
+        printf("--- BENCHMARK for %s\n", BENCHCASES[i].bench_name);
+        printf("%f seconds elapsed => %.2f GB/s\n\n", elapsed, ALLOC_SIZE/elapsed/1e9);
+    }
 
     free(input_vector);
     free(output_vector);
+
+    exit(0);
 }

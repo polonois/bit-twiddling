@@ -4,67 +4,45 @@
 
 #include "reverse.h"
 
+#define TEST_NUMBER 6
 #define N 100000
-#define ALLOC_SIZE N*sizeof (unsigned int)
+#define ALLOC_SIZE N*sizeof (uint32_t)
+
+struct testcase {
+    char *test_name;
+    void (*func)(unsigned *, const unsigned *, unsigned);
+};
+
+static const struct testcase TESTCASES[TEST_NUMBER] = {
+    {.test_name="32b reverse with LOOKUP",     reverse_uint_lookup},
+    {.test_name="32b reverse with LOG",        reverse_uint_log},
+    {.test_name="32b reverse with LOG AVX256", reverse_uint_log_avx256},
+    {.test_name="32b reverse with 64b MUL 1",  reverse_uint_64bmul_1},
+    {.test_name="32b reverse with 64b MUL 2",  reverse_uint_64bmul_2},
+    {.test_name="32b reverse with no64b MUL",  reverse_uint_no64bmul}
+};
 
 void test_reverse() {
-    unsigned int *input_vector = (unsigned int *)aligned_alloc(32, ALLOC_SIZE);
-    unsigned int *output_vector = (unsigned int *)aligned_alloc(32, ALLOC_SIZE);
-    unsigned int *ref_output_vector = (unsigned int *)aligned_alloc(32, ALLOC_SIZE);
+    // Initialize all the test vectors
+    uint32_t *input_vector = (uint32_t *)aligned_alloc(32, ALLOC_SIZE);
+    uint32_t *output_vector = (uint32_t *)aligned_alloc(32, ALLOC_SIZE);
+    uint32_t *ref_output_vector = (uint32_t *)aligned_alloc(32, ALLOC_SIZE);
 
     for (int i = 0; i < N; i++) {
-        input_vector[i] = (unsigned int)random();
+        input_vector[i] = (uint32_t)random();
     }
 
+    // Reference vector to be tested against
     reverse_uint_naive(ref_output_vector, input_vector, N);
 
-    reverse_uint_lookup(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint lookup is correct\n");
-    } else {
-        printf("Reverse uint lookup is INCORRECT\n");
-    }
-    memset(output_vector, 0, ALLOC_SIZE);
+    for (int i = 0; i < TEST_NUMBER; i++) {
+        TESTCASES[i].func(output_vector, input_vector, N);
 
-    reverse_uint_log(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint log is correct\n");
-    } else {
-        printf("Reverse uint log is INCORRECT\n");
-    }
-    memset(output_vector, 0, ALLOC_SIZE);
+        int res = memcmp(ref_output_vector, output_vector, ALLOC_SIZE);
+        printf("%s is %s\n", TESTCASES[i].test_name, res ? "INCORRECT" : "correct");
 
-    reverse_uint_log_avx256(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint log avx256 is correct\n");
-    } else {
-        printf("Reverse uint log avx256 is INCORRECT\n");
+        memset(output_vector, 0, ALLOC_SIZE);
     }
-    memset(output_vector, 0, ALLOC_SIZE);
-    
-    reverse_uint_64bmul_1(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint 64bmul_1 is correct\n");
-    } else {
-        printf("Reverse uint 64bmul_1 is INCORRECT\n");
-    }
-    memset(output_vector, 0, ALLOC_SIZE);
-
-    reverse_uint_64bmul_2(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint 64bmul_2 is correct\n");
-    } else {
-        printf("Reverse uint 64bmul_2 is INCORRECT\n");
-    }
-    memset(output_vector, 0, ALLOC_SIZE);
-
-    reverse_uint_no64bmul(output_vector, input_vector, N);
-    if (memcmp(ref_output_vector, output_vector, ALLOC_SIZE) == 0) {
-        printf("Reverse uint no64bmul is correct\n");
-    } else {
-        printf("Reverse uint no64bmul is INCORRECT\n");
-    }
-    memset(output_vector, 0, ALLOC_SIZE);
 
     free(input_vector);
     free(output_vector);

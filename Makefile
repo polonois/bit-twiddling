@@ -21,7 +21,7 @@ TEST_DEPS := $(TEST_OBJS:.o=.d)
 
 INC_FLAGS := $(addprefix -I,$(INC_DIR))
 
-CFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -g -O2 -mavx -mavx2
+CFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -g3 -O3 -mavx -mavx2 -Wall -Wextra -pedantic
 LDFLAGS ?= -shared
 
 all: build
@@ -39,20 +39,20 @@ $(BUILD_DIR)/$(LIB_TARGET): $(OBJS)
 
 # BENCHMARK
 benchmark: $(BENCH_TARGET)
-	LD_LIBRARY_PATH=$(PWD)/$(BUILD_DIR) ./$(BENCH_TARGET)
+	./$(BENCH_TARGET)
 
 $(BENCH_TARGET): build $(BENCH_OBJS)
-	$(CC) $(INCFLAGS) $(BENCH_OBJS) -L$(BUILD_DIR) -lbittwiddling -o $@
+	$(CC) $(INCFLAGS) $(BENCH_OBJS) -L$(BUILD_DIR) -lbittwiddling -o $@ -Wl,-rpath=$(PWD)/$(BUILD_DIR)
 
 $(BENCH_OBJS): $(BUILD_DIR)/%.o : $(BENCH_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # TEST
 test: $(TEST_TARGET)
-	LD_LIBRARY_PATH=$(PWD)/$(BUILD_DIR) ./$(TEST_TARGET)
+	./$(TEST_TARGET)
 
 $(TEST_TARGET): build $(TEST_OBJS)
-	$(CC) $(INCFLAGS) $(TEST_OBJS) -L$(BUILD_DIR) -lbittwiddling -o $@
+	$(CC) $(INCFLAGS) $(TEST_OBJS) -L$(BUILD_DIR) -lbittwiddling -o $@ -Wl,-rpath=$(PWD)/$(BUILD_DIR)
 
 $(TEST_OBJS): $(BUILD_DIR)/%.o : $(TEST_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -1,12 +1,12 @@
 #include <immintrin.h>
 #include <limits.h>
-#include <immintrin.h>
+#include <stdint.h>
 
-void reverse_uint_naive(unsigned int *output, const unsigned int *input, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
-        unsigned int in = input[i];
-        unsigned int result = in;
-        int s = sizeof(unsigned int)*CHAR_BIT - 1;
+void reverse_uint_naive(uint32_t *output, const uint32_t *input, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        uint32_t in = input[i];
+        uint32_t result = in;
+        int s = sizeof(uint32_t)*CHAR_BIT - 1;
 
         for (in >>= 1; in; in >>=1) {
             result <<= 1;
@@ -25,8 +25,8 @@ static const unsigned char bit_reverse_table256[256] =
 #   define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
     R6(0), R6(2), R6(1), R6(3)
 };
-void reverse_uint_lookup(unsigned int *output, const unsigned int *input, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
+void reverse_uint_lookup(uint32_t *output, const uint32_t *input, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
         unsigned char *in = (unsigned char *)&input[i];
         unsigned char *out = (unsigned char *)&output[i];
         out[3] = bit_reverse_table256[in[0]];
@@ -39,8 +39,8 @@ void reverse_uint_lookup(unsigned int *output, const unsigned int *input, unsign
 unsigned char reverse_uchar_64mul_1(unsigned char input) {
     return (input * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 }
-void reverse_uint_64bmul_1(unsigned int *output, const unsigned int *input, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
+void reverse_uint_64bmul_1(uint32_t *output, const uint32_t *input, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
         unsigned char *in = (unsigned char *)&input[i];
         unsigned char *out = (unsigned char *)&output[i];
 
@@ -54,8 +54,8 @@ void reverse_uint_64bmul_1(unsigned int *output, const unsigned int *input, unsi
 unsigned char reverse_uchar_64mul_2(unsigned char input) {
     return ((input * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32;
 }
-void reverse_uint_64bmul_2(unsigned int *output, const unsigned int *input, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
+void reverse_uint_64bmul_2(uint32_t *output, const uint32_t *input, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
         unsigned char *in = (unsigned char *)&input[i];
         unsigned char *out = (unsigned char *)&output[i];
 
@@ -69,8 +69,8 @@ void reverse_uint_64bmul_2(unsigned int *output, const unsigned int *input, unsi
 unsigned char reverse_uchar_no64bmul(unsigned char input) {
     return ((input * 0x0802LU & 0x22110LU) | (input * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
 }
-void reverse_uint_no64bmul(unsigned int *output, const unsigned int *input, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
+void reverse_uint_no64bmul(uint32_t *output, const uint32_t *input, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
         unsigned char *in = (unsigned char *)&input[i];
         unsigned char *out = (unsigned char *)&output[i];
 
@@ -80,9 +80,9 @@ void reverse_uint_no64bmul(unsigned int *output, const unsigned int *input, unsi
         out[3] = reverse_uchar_no64bmul(in[0]);
     }
 }
-void reverse_uint_log(unsigned int *output, const unsigned int *input, unsigned int size){
-    for (unsigned int i= 0; i < size; i++) {
-        unsigned int v = input[i];
+void reverse_uint_log(uint32_t *output, const uint32_t *input, uint32_t size){
+    for (uint32_t i= 0; i < size; i++) {
+        uint32_t v = input[i];
 
         v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
         v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
@@ -95,8 +95,8 @@ void reverse_uint_log(unsigned int *output, const unsigned int *input, unsigned 
 
 #define AVX256_UINT_WIDTH 8
 
-void reverse_uint_log_avx256(unsigned int *output, const unsigned int *input, unsigned int size) {
-    unsigned int i = 0;
+void reverse_uint_log_avx256(uint32_t *output, const uint32_t *input, uint32_t size) {
+    uint32_t i = 0;
 
     __m256i constant_5555 = _mm256_set1_epi32(0x55555555);
     __m256i constant_3333 = _mm256_set1_epi32(0x33333333);
@@ -128,6 +128,6 @@ void reverse_uint_log_avx256(unsigned int *output, const unsigned int *input, un
         _mm256_storeu_si256((__m256i *)&output[i], temp);
     }
 
-    unsigned int remaining_size = size-size/AVX256_UINT_WIDTH*AVX256_UINT_WIDTH;
+    uint32_t remaining_size = size-size/AVX256_UINT_WIDTH*AVX256_UINT_WIDTH;
     reverse_uint_log(&output[i], &input[i], remaining_size);
 }
